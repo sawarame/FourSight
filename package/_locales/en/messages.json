@@ -3,6 +3,6 @@
     "message": "FourSight (DORA Tracker for GitHub)"
   },
   "extDesc": {
-    "message": "Automatically calculate and visualize 'Four Keys (DORA metrics)' from GitHub repository data."
+    "message": "Automatically calculate and visualize Four Keys (DORA metrics) directly from your GitHub repository data."
   }
 }

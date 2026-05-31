@@ -1,6 +1,6 @@
 {
   "name": "foursight",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "FourSight (DORA Tracker for GitHub)",
   "scripts": {
     "build": "rimraf ./package/js && rimraf package.zip && npx webpack && cd package && zip -r ../package.zip .",
