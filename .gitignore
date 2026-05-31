@@ -1,0 +1,8 @@
+.DS_Store
+
+# Dependencies
+/node_modules
+
+# Build output
+/package/js
+package.zip

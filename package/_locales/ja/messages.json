@@ -1,0 +1,8 @@
+{
+  "extName": {
+    "message": "FourSight (DORA Tracker for GitHub)"
+  },
+  "extDesc": {
+    "message": "GitHubリポジトリのデータから「Four Keys（DORAメトリクス）」を自動算出し可視化するブラウザ拡張機能"
+  }
+}
