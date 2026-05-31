@@ -6,8 +6,7 @@ module.exports = {
   mode: 'production',
   entry: {
     background: './src/background.ts',
-    dashboard: './src/dashboard.ts',
-    options: './src/options.ts'
+    dashboard: './src/dashboard.ts'
   },
   output: {
     path: path.resolve(__dirname, 'package/js'),

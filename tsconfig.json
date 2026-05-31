@@ -5,9 +5,10 @@
     "strict": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "skipLibCheck": true,
-    "outDir": "./package/js"
+    "outDir": "./package/js",
+    "rootDir": "./src"
   },
   "include": ["src/**/*"]
 }

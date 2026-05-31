@@ -10,7 +10,7 @@
   "action": {
     "default_title": "FourSightを開く"
   },
-  "options_page": "options.html",
+  "options_page": "dashboard.html",
   "permissions": [
     "storage",
     "tabs"

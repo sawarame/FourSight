@@ -1,5 +1,7 @@
 <template>
   <div class="dashboard-layout">
+    <Toast />
+    
     <header class="header">
       <div class="logo">
         <i class="pi pi-chart-line" style="font-size: 1.5rem"></i>
@@ -10,7 +12,8 @@
           <i class="pi pi-search" />
           <InputText v-model="searchQuery" placeholder="リポジトリを検索..." />
         </span>
-        <Button icon="pi pi-cog" rounded text @click="openOptions" />
+        <DatePicker v-model="selectedDateRange" selectionMode="range" :manualInput="false" placeholder="期間を選択..." dateFormat="yy/mm/dd" />
+        <Button icon="pi pi-cog" rounded text @click="isOptionsVisible = true" />
       </div>
     </header>
 
@@ -51,17 +54,70 @@
         </Card>
       </div>
     </main>
+
+    <!-- 設定モーダル (Options) -->
+    <Dialog v-model:visible="isOptionsVisible" modal header="FourSight 設定" :style="{ width: '400px' }">
+      <div class="form-group">
+        <p style="margin-top: 0;">
+          GitHub Personal Access Token (PAT) を設定してください。<br>
+          <small>※ 必要なスコープ: <code>repo</code>, <code>read:org</code></small>
+        </p>
+        <div style="margin-bottom: 0.5rem; font-weight: bold;">GitHub PAT</div>
+        <InputText id="github-token" v-model="token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" style="width: 100%" />
+      </div>
+      <template #footer>
+        <Button label="キャンセル" icon="pi pi-times" text @click="isOptionsVisible = false" />
+        <Button label="保存" icon="pi pi-save" @click="saveToken" />
+      </template>
+    </Dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import { useToast } from 'primevue/usetoast';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
 import Chart from 'primevue/chart';
+import DatePicker from 'primevue/datepicker';
+import Dialog from 'primevue/dialog';
+import Toast from 'primevue/toast';
 
 const searchQuery = ref('');
+const today = new Date();
+const pastWeek = new Date();
+pastWeek.setDate(today.getDate() - 7);
+const selectedDateRange = ref([pastWeek, today]);
+
+// 設定モーダル用
+const isOptionsVisible = ref(false);
+const token = ref('');
+const toast = useToast();
+
+onMounted(() => {
+  if (typeof chrome !== 'undefined' && chrome.storage) {
+    chrome.storage.local.get(["githubToken"], (result) => {
+      if (result.githubToken) {
+        token.value = result.githubToken;
+      } else {
+        // トークンが未設定の場合は自動で設定モーダルを開く
+        isOptionsVisible.value = true;
+      }
+    });
+  }
+});
+
+const saveToken = () => {
+  if (typeof chrome !== 'undefined' && chrome.storage) {
+    chrome.storage.local.set({ githubToken: token.value.trim() }, () => {
+      toast.add({ severity: 'success', summary: '保存完了', detail: 'トークンを保存しました', life: 3000 });
+      isOptionsVisible.value = false;
+    });
+  } else {
+    toast.add({ severity: 'warn', summary: '保存失敗', detail: 'Chrome APIにアクセスできません', life: 3000 });
+  }
+};
 
 // ダミーデータ（本来は GitHub API から取得）
 const chartData = ref({
@@ -88,12 +144,6 @@ const chartOptions = ref({
   responsive: true,
   maintainAspectRatio: false
 });
-
-const openOptions = () => {
-  if (typeof chrome !== 'undefined' && chrome.runtime) {
-    chrome.runtime.openOptionsPage();
-  }
-};
 </script>
 
 <style scoped>
@@ -161,5 +211,9 @@ const openOptions = () => {
 }
 .chart {
   height: 300px;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
 }
 </style>
