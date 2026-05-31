@@ -4,29 +4,14 @@
   <meta charset="UTF-8">
   <title>FourSight Options</title>
   <style>
-    body { font-family: sans-serif; margin: 20px; }
-    .container { max-width: 600px; margin: 0 auto; }
-    .form-group { margin-bottom: 15px; }
-    label { display: block; margin-bottom: 5px; }
-    input[type="text"] { width: 100%; padding: 8px; box-sizing: border-box; }
-    button { padding: 10px 15px; cursor: pointer; }
-    .status { color: green; margin-top: 10px; }
+    body { margin: 0; padding: 0; background-color: var(--p-surface-0); color: var(--p-surface-900); }
+    @media (prefers-color-scheme: dark) {
+      body { background-color: var(--p-surface-900); color: var(--p-surface-0); }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>FourSight 設定</h1>
-    <p>
-      GitHub Personal Access Token (PAT) を設定してください。<br>
-      ※ 必要なスコープ: <code>repo</code>, <code>read:org</code> 等
-    </p>
-    <div class="form-group">
-      <label for="github-token">GitHub PAT:</label>
-      <input type="text" id="github-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
-    </div>
-    <button id="save-button">保存</button>
-    <div id="status-message" class="status"></div>
-  </div>
+  <div id="app"></div>
   <script src="js/options.js"></script>
 </body>
 </html>

@@ -1,28 +1,38 @@
-/**
- * オプションページ用スクリプト
- * GitHub PAT の設定や保存機能を提供します。
- */
+import { createApp } from 'vue';
+import PrimeVue from 'primevue/config';
+import Aura from '@primevue/themes/aura';
+import { definePreset } from '@primevue/themes';
+import ToastService from 'primevue/toastservice';
+import 'primeicons/primeicons.css';
 
-document.addEventListener("DOMContentLoaded", () => {
-  const tokenInput = document.getElementById("github-token") as HTMLInputElement;
-  const saveButton = document.getElementById("save-button") as HTMLButtonElement;
-  const statusMessage = document.getElementById("status-message") as HTMLDivElement;
+import Options from './Options.vue';
 
-  // 保存されているトークンを読み込んで入力欄に設定
-  chrome.storage.local.get(["githubToken"], (result) => {
-    if (result.githubToken) {
-      tokenInput.value = result.githubToken;
+const MyPreset = definePreset(Aura, {
+    semantic: {
+        primary: {
+            50: '#eef4ff',
+            100: '#dce8ff',
+            200: '#b9d1ff',
+            300: '#96bbff',
+            400: '#73a5ff',
+            500: '#0969da', // GitHub Blue
+            600: '#0758c0',
+            700: '#0648a3',
+            800: '#043785',
+            900: '#032666',
+            950: '#021845'
+        }
     }
-  });
-
-  // 保存ボタンのクリックイベント
-  saveButton.addEventListener("click", () => {
-    const token = tokenInput.value.trim();
-    chrome.storage.local.set({ githubToken: token }, () => {
-      statusMessage.textContent = "トークンを保存しました。";
-      setTimeout(() => {
-        statusMessage.textContent = "";
-      }, 3000);
-    });
-  });
 });
+
+const app = createApp(Options);
+app.use(PrimeVue, {
+  theme: {
+    preset: MyPreset,
+    options: {
+      darkModeSelector: 'system'
+    }
+  }
+});
+app.use(ToastService);
+app.mount('#app');
