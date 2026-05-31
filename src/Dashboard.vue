@@ -8,12 +8,17 @@
         <span>FourSight Dashboard</span>
       </div>
       <div class="header-actions">
-        <AutoComplete v-model="searchQuery" :suggestions="filteredRepos" @complete="searchRepos" @item-select="fetchMetricsData" @keyup.enter="fetchMetricsData" placeholder="owner/repo" dropdown style="width: 250px" />
-        <span class="p-input-icon-left" style="width: 140px;">
-          <i class="pi pi-share-alt" />
-          <InputText v-model="searchBranch" placeholder="branch (main)" @keyup.enter="fetchMetricsData" style="width: 100%" />
-        </span>
-        <DatePicker v-model="selectedDateRange" selectionMode="range" :manualInput="false" placeholder="期間を選択..." dateFormat="yy/mm/dd" />
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <AutoComplete v-model="searchQuery" :suggestions="filteredRepos" @complete="searchRepos" @item-select="fetchMetricsData" @keyup.enter="fetchMetricsData" placeholder="owner/repo" dropdown style="width: 250px" />
+          <a v-if="searchQuery && searchQuery.includes('/')" :href="`https://github.com/${searchQuery.trim()}`" target="_blank" rel="noopener noreferrer" style="color: var(--p-surface-700); text-decoration: none; display: flex;" title="GitHubで開く">
+            <i class="pi pi-github" style="font-size: 1.25rem; cursor: pointer; transition: color 0.2s;"></i>
+          </a>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <i class="pi pi-share-alt" style="color: var(--p-surface-500)"></i>
+          <InputText v-model="searchBranch" placeholder="branch (main)" @keyup.enter="fetchMetricsData" style="width: 130px" />
+        </div>
+        <DatePicker v-model="selectedDateRange" selectionMode="range" :manualInput="false" placeholder="期間を選択..." dateFormat="yy/mm/dd" style="width: 240px" />
         <Button icon="pi pi-refresh" rounded text @click="fetchMetricsData" :loading="isLoading" />
         <Button icon="pi pi-cog" rounded text @click="isOptionsVisible = true" />
       </div>
@@ -69,9 +74,14 @@
 
       <div class="charts-area">
         <Card class="chart-card">
-          <template #title>アクティビティ推移</template>
+          <template #title>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span>アクティビティ推移</span>
+              <SelectButton v-model="chartType" :options="chartTypeOptions" optionLabel="label" optionValue="value" :allowEmpty="false" />
+            </div>
+          </template>
           <template #content>
-            <Chart type="line" :data="chartData" :options="chartOptions" class="chart" />
+            <Chart :type="chartType" :data="chartData" :options="chartOptions" class="chart" />
           </template>
         </Card>
       </div>
@@ -113,6 +123,7 @@ import DatePicker from 'primevue/datepicker';
 import Dialog from 'primevue/dialog';
 import Toast from 'primevue/toast';
 import AutoComplete from 'primevue/autocomplete';
+import SelectButton from 'primevue/selectbutton';
 
 import { fetchMergedPullRequests, fetchBugIssues, searchRepositories } from './api/github';
 import { calculateMetrics, FourKeysMetrics } from './utils/metrics';
@@ -254,6 +265,7 @@ const updateChart = (prs: any[], issues: any[], start: Date, end: Date) => {
         data: prCounts,
         fill: false,
         borderColor: '#28a745', // GitHub Green
+        backgroundColor: '#28a745', // Bar fill color
         tension: 0.4
       },
       {
@@ -261,6 +273,7 @@ const updateChart = (prs: any[], issues: any[], start: Date, end: Date) => {
         data: issueCounts,
         fill: false,
         borderColor: '#d73a49', // GitHub Red
+        backgroundColor: '#d73a49', // Bar fill color
         tension: 0.4
       }
     ]
@@ -271,6 +284,12 @@ const chartData = ref<{ labels: string[], datasets: any[] }>({
   labels: [],
   datasets: []
 });
+
+const chartType = ref('bar');
+const chartTypeOptions = ref([
+  { label: '折れ線', value: 'line' },
+  { label: '棒グラフ', value: 'bar' }
+]);
 
 const chartOptions = ref({
   responsive: true,
