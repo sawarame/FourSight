@@ -5,20 +5,20 @@
     <header class="header">
       <div class="logo">
         <i class="pi pi-chart-line" style="font-size: 1.5rem"></i>
-        <span>FourSight Dashboard</span>
+        <span>{{ t('dashboard') }}</span>
       </div>
       <div class="header-actions">
         <div style="display: flex; align-items: center; gap: 0.5rem;">
           <AutoComplete v-model="searchQuery" :suggestions="filteredRepos" @complete="searchRepos" @item-select="fetchMetricsData" @keyup.enter="fetchMetricsData" placeholder="owner/repo" dropdown style="width: 250px" />
-          <a v-if="searchQuery && searchQuery.includes('/')" :href="`https://github.com/${searchQuery.trim()}`" target="_blank" rel="noopener noreferrer" style="color: var(--p-surface-700); text-decoration: none; display: flex;" title="GitHubで開く">
+          <a v-if="searchQuery && searchQuery.includes('/')" :href="`https://github.com/${searchQuery.trim()}`" target="_blank" rel="noopener noreferrer" style="color: var(--p-surface-700); text-decoration: none; display: flex;" :title="t('openGithub')">
             <i class="pi pi-github" style="font-size: 1.25rem; cursor: pointer; transition: color 0.2s;"></i>
           </a>
         </div>
         <div style="display: flex; align-items: center; gap: 0.5rem;">
           <i class="pi pi-share-alt" style="color: var(--p-surface-500)"></i>
-          <InputText v-model="searchBranch" placeholder="branch (main)" @keyup.enter="fetchMetricsData" style="width: 130px" />
+          <InputText v-model="searchBranch" :placeholder="t('branchPlaceholder')" @keyup.enter="fetchMetricsData" style="width: 130px" />
         </div>
-        <DatePicker v-model="selectedDateRange" selectionMode="range" :manualInput="false" placeholder="期間を選択..." dateFormat="yy/mm/dd" style="width: 240px" />
+        <DatePicker v-model="selectedDateRange" selectionMode="range" :manualInput="false" :placeholder="t('datePlaceholder')" dateFormat="yy/mm/dd" style="width: 240px" />
         <Button icon="pi pi-refresh" rounded text @click="fetchMetricsData" :loading="isLoading" />
         <Button icon="pi pi-cog" rounded text @click="isOptionsVisible = true" />
       </div>
@@ -27,29 +27,29 @@
     <main class="main-content">
       <div class="summary-cards">
         <Card class="summary-card">
-          <template #title>デプロイ頻度 (DF)</template>
+          <template #title>{{ t('df') }}</template>
           <template #content>
             <div class="metric-value">
               <span v-if="isLoading"><i class="pi pi-spin pi-spinner" style="font-size: 1.5rem"></i></span>
               <span v-else-if="metrics">{{ metrics.deploymentFrequency }}</span>
               <span v-else>-</span>
-              <span class="unit">回</span>
+              <span class="unit">{{ t('dfUnit') }}</span>
             </div>
           </template>
         </Card>
         <Card class="summary-card">
-          <template #title>変更リードタイム (LTFC)</template>
+          <template #title>{{ t('ltfc') }}</template>
           <template #content>
             <div class="metric-value">
               <span v-if="isLoading"><i class="pi pi-spin pi-spinner" style="font-size: 1.5rem"></i></span>
               <span v-else-if="metrics">{{ metrics.leadTimeForChanges ?? '-' }}</span>
               <span v-else>-</span>
-              <span class="unit">日</span>
+              <span class="unit">{{ t('ltfcUnit') }}</span>
             </div>
           </template>
         </Card>
         <Card class="summary-card">
-          <template #title>変更障害率 (CFR)</template>
+          <template #title>{{ t('cfr') }}</template>
           <template #content>
             <div class="metric-value">
               <span v-if="isLoading"><i class="pi pi-spin pi-spinner" style="font-size: 1.5rem"></i></span>
@@ -60,13 +60,13 @@
           </template>
         </Card>
         <Card class="summary-card">
-          <template #title>サービス復元時間 (TRRS)</template>
+          <template #title>{{ t('trrs') }}</template>
           <template #content>
             <div class="metric-value">
               <span v-if="isLoading"><i class="pi pi-spin pi-spinner" style="font-size: 1.5rem"></i></span>
               <span v-else-if="metrics">{{ metrics.timeToRestoreService ?? '-' }}</span>
               <span v-else>-</span>
-              <span class="unit">時間</span>
+              <span class="unit">{{ t('trrsUnit') }}</span>
             </div>
           </template>
         </Card>
@@ -76,7 +76,7 @@
         <Card class="chart-card">
           <template #title>
             <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span>アクティビティ推移</span>
+              <span>{{ t('activityChart') }}</span>
               <SelectButton v-model="chartType" :options="chartTypeOptions" optionLabel="label" optionValue="value" :allowEmpty="false" />
             </div>
           </template>
@@ -88,32 +88,37 @@
     </main>
 
     <!-- 設定モーダル (Options) -->
-    <Dialog v-model:visible="isOptionsVisible" modal header="FourSight 設定" :style="{ width: '450px' }">
+    <Dialog v-model:visible="isOptionsVisible" modal :header="t('settings')" :style="{ width: '450px' }">
+      <div class="form-group mb-4">
+        <div class="font-bold mb-2">{{ t('language') }}</div>
+        <SelectButton v-model="locale" :options="localeOptions" optionLabel="label" optionValue="value" :allowEmpty="false" />
+      </div>
+
       <div class="form-group mb-4">
         <p style="margin-top: 0; color: var(--p-surface-600);">
-          GitHub Personal Access Token (PAT) を設定してください。<br>
-          <small>※ 必要なスコープ: <code>repo</code>, <code>read:org</code></small>
+          {{ t('patDesc') }}<br>
+          <small>{{ t('patScope') }} <code>repo</code>, <code>read:org</code></small>
         </p>
         <div class="font-bold mb-2">GitHub PAT</div>
         <InputText id="github-token" v-model="token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" style="width: 100%" />
       </div>
       
       <div class="form-group">
-        <div class="font-bold mb-2">障害検知ラベル (CFR / TRRS 用)</div>
+        <div class="font-bold mb-2">{{ t('bugLabels') }}</div>
         <InputText id="bug-labels" v-model="bugLabels" placeholder="bug,incident" style="width: 100%" />
-        <small style="color: var(--p-surface-500);">カンマ区切りで複数指定可能（例: <code>bug,hotfix</code>）</small>
+        <small style="color: var(--p-surface-500);">{{ t('bugLabelsHint') }} <code>bug,hotfix</code>）</small>
       </div>
       
       <template #footer>
-        <Button label="キャンセル" icon="pi pi-times" text @click="isOptionsVisible = false" />
-        <Button label="保存" icon="pi pi-save" @click="saveToken" />
+        <Button :label="t('cancel')" icon="pi pi-times" text @click="isOptionsVisible = false" />
+        <Button :label="t('save')" icon="pi pi-save" @click="saveToken" />
       </template>
     </Dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useToast } from 'primevue/usetoast';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
@@ -127,6 +132,144 @@ import SelectButton from 'primevue/selectbutton';
 
 import { fetchMergedPullRequests, fetchBugIssues, searchRepositories } from './api/github';
 import { calculateMetrics, FourKeysMetrics } from './utils/metrics';
+
+const isDemoMode = new URLSearchParams(window.location.search).get('demo') === 'true';
+
+const generateDemoData = (start: Date, end: Date) => {
+  const prs: any[] = [];
+  const issues: any[] = [];
+  
+  let current = new Date(start);
+  while (current <= end) {
+    // 1日あたり2〜5回のデプロイ（PR）を生成
+    const prCount = Math.floor(Math.random() * 4) + 2;
+    for (let i = 0; i < prCount; i++) {
+      const mergedDate = new Date(current);
+      mergedDate.setHours(Math.floor(Math.random() * 24));
+      
+      // リードタイム: 12時間〜48時間
+      const commitDate = new Date(mergedDate.getTime() - (Math.random() * 36 + 12) * 60 * 60 * 1000);
+      
+      prs.push({
+        mergedAt: mergedDate.toISOString(),
+        commits: { nodes: [{ commit: { committedDate: commitDate.toISOString() } }] }
+      });
+    }
+    
+    // CFR（変更障害率）が0にならないように、高確率で障害を発生させる
+    // 1日あたり 0〜2回の障害
+    let issueCount = 0;
+    const r = Math.random();
+    if (r < 0.6) issueCount = 1;      // 60%の確率で1件
+    else if (r < 0.8) issueCount = 2; // 20%の確率で2件
+    
+    for (let i = 0; i < issueCount; i++) {
+      const createdDate = new Date(current);
+      createdDate.setHours(Math.floor(Math.random() * 24));
+      
+      // 復旧時間: 2〜10時間
+      const closedDate = new Date(createdDate.getTime() + (Math.random() * 8 + 2) * 60 * 60 * 1000);
+      
+      issues.push({
+        createdAt: createdDate.toISOString(),
+        closedAt: closedDate.toISOString()
+      });
+    }
+    
+    current.setDate(current.getDate() + 1);
+  }
+  
+  return { prs, issues };
+};
+
+// 言語設定
+const locale = ref('ja');
+const localeOptions = ref([
+  { label: 'English', value: 'en' },
+  { label: '日本語', value: 'ja' }
+]);
+
+const t = (key: string) => {
+  const messages: Record<string, Record<string, string>> = {
+    ja: {
+      dashboard: "FourSight Dashboard",
+      branchPlaceholder: "branch (main)",
+      datePlaceholder: "期間を選択...",
+      df: "デプロイ頻度 (DF)",
+      dfUnit: "回",
+      ltfc: "変更リードタイム (LTFC)",
+      ltfcUnit: "日",
+      cfr: "変更障害率 (CFR)",
+      trrs: "サービス復元時間 (TRRS)",
+      trrsUnit: "時間",
+      activityChart: "アクティビティ推移",
+      deployments: "デプロイ回数",
+      failures: "障害発生数",
+      settings: "FourSight 設定",
+      patDesc: "GitHub Personal Access Token (PAT) を設定してください。",
+      patScope: "※ 必要なスコープ:",
+      bugLabels: "障害検知ラベル (CFR / TRRS 用)",
+      bugLabelsHint: "カンマ区切りで複数指定可能（例:",
+      cancel: "キャンセル",
+      save: "保存",
+      saveSuccess: "保存完了",
+      saveSuccessDesc: "設定を保存しました",
+      saveFail: "保存失敗",
+      saveFailDesc: "Chrome APIにアクセスできません",
+      inputError: "入力エラー",
+      inputErrorDesc: "リポジトリ名は owner/repo の形式で入力してください",
+      dateError: "期間エラー",
+      dateErrorDesc: "開始日と終了日を選択してください",
+      patMissing: "PATが設定されていません",
+      fetchSuccess: "取得完了",
+      fetchSuccessDesc: "メトリクスを更新しました",
+      fetchError: "取得エラー",
+      openGithub: "GitHubで開く",
+      lineChart: "折れ線",
+      barChart: "棒グラフ",
+      language: "表示言語 / Language"
+    },
+    en: {
+      dashboard: "FourSight Dashboard",
+      branchPlaceholder: "branch (main)",
+      datePlaceholder: "Select period...",
+      df: "Deployment Frequency (DF)",
+      dfUnit: "times",
+      ltfc: "Lead Time for Changes (LTFC)",
+      ltfcUnit: "days",
+      cfr: "Change Failure Rate (CFR)",
+      trrs: "Time to Restore Service (TRRS)",
+      trrsUnit: "hours",
+      activityChart: "Activity Trend",
+      deployments: "Deployments",
+      failures: "Failures",
+      settings: "FourSight Settings",
+      patDesc: "Set your GitHub Personal Access Token (PAT).",
+      patScope: "* Required scopes:",
+      bugLabels: "Bug/Incident Labels (for CFR & TRRS)",
+      bugLabelsHint: "Comma separated (e.g.",
+      cancel: "Cancel",
+      save: "Save",
+      saveSuccess: "Saved",
+      saveSuccessDesc: "Settings have been saved",
+      saveFail: "Failed",
+      saveFailDesc: "Cannot access Chrome API",
+      inputError: "Input Error",
+      inputErrorDesc: "Repository must be in owner/repo format",
+      dateError: "Date Error",
+      dateErrorDesc: "Please select start and end dates",
+      patMissing: "PAT is not set",
+      fetchSuccess: "Fetched",
+      fetchSuccessDesc: "Metrics updated successfully",
+      fetchError: "Fetch Error",
+      openGithub: "Open in GitHub",
+      lineChart: "Line",
+      barChart: "Bar",
+      language: "Language / 表示言語"
+    }
+  };
+  return messages[locale.value]?.[key] || key;
+};
 
 const searchQuery = ref('');
 const searchBranch = ref('main');
@@ -159,10 +302,18 @@ const bugLabels = ref('bug,incident');
 const toast = useToast();
 
 onMounted(() => {
+  if (isDemoMode) {
+    searchQuery.value = 'example/awesome-project';
+    setTimeout(() => {
+      fetchMetricsData();
+    }, 500);
+  }
+
   if (typeof chrome !== 'undefined' && chrome.storage) {
-    chrome.storage.local.get(["githubToken", "bugLabels"], (result) => {
+    chrome.storage.local.get(["githubToken", "bugLabels", "locale"], (result) => {
       if (result.githubToken) token.value = result.githubToken;
       if (result.bugLabels) bugLabels.value = result.bugLabels;
+      if (result.locale) locale.value = result.locale;
       
       if (!result.githubToken) {
         // トークンが未設定の場合は自動で設定モーダルを開く
@@ -176,25 +327,26 @@ const saveToken = () => {
   if (typeof chrome !== 'undefined' && chrome.storage) {
     const data = {
       githubToken: token.value.trim(),
-      bugLabels: bugLabels.value.trim() || 'bug,incident'
+      bugLabels: bugLabels.value.trim() || 'bug,incident',
+      locale: locale.value
     };
     chrome.storage.local.set(data, () => {
-      toast.add({ severity: 'success', summary: '保存完了', detail: '設定を保存しました', life: 3000 });
+      toast.add({ severity: 'success', summary: t('saveSuccess'), detail: t('saveSuccessDesc'), life: 3000 });
       isOptionsVisible.value = false;
     });
   } else {
-    toast.add({ severity: 'warn', summary: '保存失敗', detail: 'Chrome APIにアクセスできません', life: 3000 });
+    toast.add({ severity: 'warn', summary: t('saveFail'), detail: t('saveFailDesc'), life: 3000 });
   }
 };
 
 const fetchMetricsData = async () => {
   if (!searchQuery.value || !searchQuery.value.includes('/')) {
-    toast.add({ severity: 'error', summary: '入力エラー', detail: 'リポジトリ名は owner/repo の形式で入力してください', life: 3000 });
+    toast.add({ severity: 'error', summary: t('inputError'), detail: t('inputErrorDesc'), life: 3000 });
     return;
   }
   
   if (!selectedDateRange.value || !selectedDateRange.value[0] || !selectedDateRange.value[1]) {
-    toast.add({ severity: 'warn', summary: '期間エラー', detail: '開始日と終了日を選択してください', life: 3000 });
+    toast.add({ severity: 'warn', summary: t('dateError'), detail: t('dateErrorDesc'), life: 3000 });
     return;
   }
 
@@ -208,27 +360,37 @@ const fetchMetricsData = async () => {
 
   isLoading.value = true;
   try {
-    const result = await new Promise<any>((resolve) => chrome.storage.local.get(["githubToken", "bugLabels"], resolve));
-    const authToken = result.githubToken;
-    const branch = searchBranch.value.trim() || 'main';
-    const labels = result.bugLabels || 'bug,incident';
-    
-    if (!authToken) {
-      isOptionsVisible.value = true;
-      throw new Error('PATが設定されていません');
-    }
+    let prs: any[] = [];
+    let issues: any[] = [];
 
-    const prs = await fetchMergedPullRequests(owner, repo, fromDate, toDate, authToken, branch);
-    const issues = await fetchBugIssues(owner, repo, fromDate, toDate, authToken, labels);
+    if (isDemoMode) {
+      const demoData = generateDemoData(selectedDateRange.value[0], selectedDateRange.value[1]);
+      prs = demoData.prs;
+      issues = demoData.issues;
+      await new Promise(r => setTimeout(r, 600)); // ローディングを演出
+    } else {
+      const result = await new Promise<any>((resolve) => chrome.storage.local.get(["githubToken", "bugLabels"], resolve));
+      const authToken = result.githubToken;
+      const branch = searchBranch.value.trim() || 'main';
+      const labels = result.bugLabels || 'bug,incident';
+      
+      if (!authToken) {
+        isOptionsVisible.value = true;
+        throw new Error(t('patMissing'));
+      }
+
+      prs = await fetchMergedPullRequests(owner, repo, fromDate, toDate, authToken, branch);
+      issues = await fetchBugIssues(owner, repo, fromDate, toDate, authToken, labels);
+    }
 
     metrics.value = calculateMetrics(prs, issues);
     
     // グラフの更新
     updateChart(prs, issues, selectedDateRange.value[0], selectedDateRange.value[1]);
 
-    toast.add({ severity: 'success', summary: '取得完了', detail: 'メトリクスを更新しました', life: 3000 });
+    toast.add({ severity: 'success', summary: t('fetchSuccess'), detail: t('fetchSuccessDesc'), life: 3000 });
   } catch (error: any) {
-    toast.add({ severity: 'error', summary: '取得エラー', detail: error.message, life: 3000 });
+    toast.add({ severity: 'error', summary: t('fetchError'), detail: error.message, life: 3000 });
   } finally {
     isLoading.value = false;
   }
@@ -261,7 +423,7 @@ const updateChart = (prs: any[], issues: any[], start: Date, end: Date) => {
     labels,
     datasets: [
       {
-        label: 'デプロイ回数',
+        label: t('deployments'),
         data: prCounts,
         fill: false,
         borderColor: '#28a745', // GitHub Green
@@ -269,7 +431,7 @@ const updateChart = (prs: any[], issues: any[], start: Date, end: Date) => {
         tension: 0.4
       },
       {
-        label: '障害発生数',
+        label: t('failures'),
         data: issueCounts,
         fill: false,
         borderColor: '#d73a49', // GitHub Red
@@ -286,14 +448,24 @@ const chartData = ref<{ labels: string[], datasets: any[] }>({
 });
 
 const chartType = ref('bar');
-const chartTypeOptions = ref([
-  { label: '折れ線', value: 'line' },
-  { label: '棒グラフ', value: 'bar' }
+const chartTypeOptions = computed(() => [
+  { label: t('lineChart'), value: 'line' },
+  { label: t('barChart'), value: 'bar' }
 ]);
 
 const chartOptions = ref({
   responsive: true,
   maintainAspectRatio: false
+});
+
+// 言語が切り替わったらグラフのラベルを更新する
+watch(locale, () => {
+  if (chartData.value.datasets.length > 0) {
+    chartData.value.datasets[0].label = t('deployments');
+    chartData.value.datasets[1].label = t('failures');
+    // 強制的にリアクティブ更新を入れる
+    chartData.value = { ...chartData.value };
+  }
 });
 </script>
 
