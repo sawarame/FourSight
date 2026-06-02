@@ -148,7 +148,7 @@ export async function fetchBugIssues(owner: string, repo: string, fromDate: stri
  * @returns リポジトリ名(owner/repo)の配列
  */
 export async function searchRepositories(queryStr: string, token: string): Promise<string[]> {
-  // ユーザーが所属・アクセス権を持つリポジトリを最新順に最大100件取得
+  // ユーザーが所属・アクセス権を持つリポジトリ、および所属する組織のリポジトリを最新順に取得
   const q = `
     query {
       viewer {
@@ -157,17 +157,44 @@ export async function searchRepositories(queryStr: string, token: string): Promi
             nameWithOwner
           }
         }
+        organizations(first: 10) {
+          nodes {
+            repositories(first: 50, orderBy: {field: PUSHED_AT, direction: DESC}) {
+              nodes {
+                nameWithOwner
+              }
+            }
+          }
+        }
       }
     }
   `;
   const data = await fetchWithGraphQL(q, {}, token);
-  const allRepos: string[] = data.viewer.repositories.nodes.map((n: any) => n.nameWithOwner);
+  const repoSet = new Set<string>();
+
+  if (data.viewer.repositories?.nodes) {
+    data.viewer.repositories.nodes.forEach((n: any) => {
+      if (n?.nameWithOwner) repoSet.add(n.nameWithOwner);
+    });
+  }
+
+  if (data.viewer.organizations?.nodes) {
+    data.viewer.organizations.nodes.forEach((org: any) => {
+      if (org.repositories?.nodes) {
+        org.repositories.nodes.forEach((n: any) => {
+          if (n?.nameWithOwner) repoSet.add(n.nameWithOwner);
+        });
+      }
+    });
+  }
+
+  const allRepos = Array.from(repoSet);
 
   const lowerQuery = queryStr.toLowerCase().trim();
   if (!lowerQuery) {
     return allRepos.slice(0, 15);
   }
 
-  // 取得した100件の中から、入力された文字列に一致するものをローカルで絞り込む
+  // 取得したリポジトリの中から、入力された文字列に一致するものをローカルで絞り込む
   return allRepos.filter(repo => repo.toLowerCase().includes(lowerQuery)).slice(0, 15);
 }
