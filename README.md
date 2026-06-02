@@ -1,6 +1,7 @@
 # FourSight (DORA Tracker for GitHub)
 
 ![Version](https://img.shields.io/github/package-json/v/sawarame/FourSight?color=blue)
+![Chrome Web Store](https://img.shields.io/chrome-web-store/v/ealiipikbpepgdeojlkjjibgfpdnmgam.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
 FourSight は、GitHubリポジトリのデータから直接「Four Keys（DORAメトリクス）」を自動的に算出し、可視化する開発チーム向けの強力なブラウザ拡張機能です。
