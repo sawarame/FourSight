@@ -7,7 +7,7 @@
 FourSight は、GitHubリポジトリのデータから直接「Four Keys（DORAメトリクス）」を自動的に算出し、可視化する開発チーム向けの強力なブラウザ拡張機能です。
 複雑な外部ツールやバックエンドサーバーを構築することなく、Pull RequestやIssueを瞬時に分析し、エンジニアリングチームの開発パフォーマンス測定をサポートします。
 
-## 🚀 Features
+## Features
 
 - **DORAメトリクスの自動算出**: デプロイ頻度 (DF)、変更リードタイム (LTFC)、変更障害率 (CFR)、サービス復元時間 (TRRS) を瞬時に計測します。
 - **アクティビティ推移の可視化**: 開発アクティビティの推移を、見やすくインタラクティブなグラフ（折れ線・棒グラフ切替可能）で表示します。
@@ -15,11 +15,20 @@ FourSight は、GitHubリポジトリのデータから直接「Four Keys（DORA
 - **サーバー構築不要**: 全ての計算処理はブラウザ上で完結。外部データベースやサードパーティ製サーバーとの連携は一切不要です。
 - **多言語対応**: 日本語と英語のUIをシームレスに切り替えられます。
 
-## 🔒 Privacy First
+## Privacy First
 
 ユーザーのデータは安全に保護されます。FourSightは公式の **GitHub GraphQL API** と直接通信を行います。設定したGitHubトークンはブラウザのローカルストレージにのみ安全に保存され、外部のサードパーティサーバーに送信されることは一切ありません。
 
 ## 🛠 Installation & Usage
+
+### Chromeウェブストアからインストール
+以下のバッジからChromeウェブストアへアクセスしインストールしてください。
+
+<a href="https://chromewebstore.google.com/detail/ealiipikbpepgdeojlkjjibgfpdnmgam" target="_blank">
+  <img src="https://developer.chrome.com/static/docs/webstore/branding/image/206x58-chrome-web-043497a3d766e.png" alt="Available in the Chrome Web Store" height="58">
+</a>
+
+### ローカルでの手動インストール（開発者向け）
 
 1. 本リポジトリをクローンまたはダウンロードします。
 2. 依存関係をインストールし、ビルドを実行します（詳細は後述の `Development` を参照）。
@@ -28,7 +37,7 @@ FourSight は、GitHubリポジトリのデータから直接「Four Keys（DORA
 5. 「パッケージ化されていない拡張機能を読み込む」をクリックし、ビルド出力された `package/` フォルダを選択します。
 6. 拡張機能の歯車アイコン（オプション画面）から GitHub PAT を登録し、対象リポジトリを検索してご利用ください。
 
-## 💻 Development
+## Development
 
 本プロジェクトは **Vue 3 + TypeScript + PrimeVue + Chart.js** で構築されています。
 
@@ -51,6 +60,6 @@ npm run build
 - [System Architecture](docs/architecture.md) - 全体構成図とモジュール設計
 - [Data Model](docs/data-model.md) - ローカルストレージの状態管理とAPIデータ構造
 
-## 📄 License
+## License
 
 MIT License
