@@ -19,7 +19,7 @@ FourSight は、GitHubリポジトリのデータから直接「Four Keys（DORA
 
 ユーザーのデータは安全に保護されます。FourSightは公式の **GitHub GraphQL API** と直接通信を行います。設定したGitHubトークンはブラウザのローカルストレージにのみ安全に保存され、外部のサードパーティサーバーに送信されることは一切ありません。
 
-## 🛠 Installation & Usage
+## Installation & Usage
 
 ### Chromeウェブストアからインストール
 以下のバッジからChromeウェブストアへアクセスしインストールしてください。

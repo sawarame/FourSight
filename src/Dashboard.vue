@@ -31,10 +31,12 @@
           <template #title>{{ t('df') }}</template>
           <template #content>
             <div class="metric-value">
-              <span v-if="isLoading"><i class="pi pi-spin pi-spinner" style="font-size: 1.5rem"></i></span>
-              <span v-else-if="metrics">{{ metrics.deploymentFrequency }}</span>
-              <span v-else>-</span>
-              <span class="unit">{{ t('dfUnit') }}</span>
+              <Skeleton v-if="isLoading" width="4rem" height="2.5rem" class="mb-1" />
+              <template v-else>
+                <span v-if="metrics">{{ metrics.deploymentFrequency }}</span>
+                <span v-else>-</span>
+                <span class="unit">{{ t('dfUnit') }}</span>
+              </template>
             </div>
           </template>
         </Card>
@@ -42,10 +44,12 @@
           <template #title>{{ t('ltfc') }}</template>
           <template #content>
             <div class="metric-value">
-              <span v-if="isLoading"><i class="pi pi-spin pi-spinner" style="font-size: 1.5rem"></i></span>
-              <span v-else-if="metrics">{{ metrics.leadTimeForChanges ?? '-' }}</span>
-              <span v-else>-</span>
-              <span class="unit">{{ t('ltfcUnit') }}</span>
+              <Skeleton v-if="isLoading" width="4rem" height="2.5rem" class="mb-1" />
+              <template v-else>
+                <span v-if="metrics">{{ metrics.leadTimeForChanges ?? '-' }}</span>
+                <span v-else>-</span>
+                <span class="unit">{{ t('ltfcUnit') }}</span>
+              </template>
             </div>
           </template>
         </Card>
@@ -53,10 +57,12 @@
           <template #title>{{ t('cfr') }}</template>
           <template #content>
             <div class="metric-value">
-              <span v-if="isLoading"><i class="pi pi-spin pi-spinner" style="font-size: 1.5rem"></i></span>
-              <span v-else-if="metrics">{{ metrics.changeFailureRate }}</span>
-              <span v-else>-</span>
-              <span class="unit">%</span>
+              <Skeleton v-if="isLoading" width="4rem" height="2.5rem" class="mb-1" />
+              <template v-else>
+                <span v-if="metrics">{{ metrics.changeFailureRate }}</span>
+                <span v-else>-</span>
+                <span class="unit">%</span>
+              </template>
             </div>
           </template>
         </Card>
@@ -64,10 +70,12 @@
           <template #title>{{ t('trrs') }}</template>
           <template #content>
             <div class="metric-value">
-              <span v-if="isLoading"><i class="pi pi-spin pi-spinner" style="font-size: 1.5rem"></i></span>
-              <span v-else-if="metrics">{{ metrics.timeToRestoreService ?? '-' }}</span>
-              <span v-else>-</span>
-              <span class="unit">{{ t('trrsUnit') }}</span>
+              <Skeleton v-if="isLoading" width="4rem" height="2.5rem" class="mb-1" />
+              <template v-else>
+                <span v-if="metrics">{{ metrics.timeToRestoreService ?? '-' }}</span>
+                <span v-else>-</span>
+                <span class="unit">{{ t('trrsUnit') }}</span>
+              </template>
             </div>
           </template>
         </Card>
@@ -142,6 +150,7 @@ import Toast from 'primevue/toast';
 import AutoComplete from 'primevue/autocomplete';
 import SelectButton from 'primevue/selectbutton';
 import Select from 'primevue/select';
+import Skeleton from 'primevue/skeleton';
 
 import { fetchMergedPullRequests, fetchBugIssues, searchRepositories } from './api/github';
 import { calculateMetrics, FourKeysMetrics } from './utils/metrics';
@@ -445,8 +454,6 @@ const fetchMetricsData = async () => {
     
     // グラフの更新
     updateChart(prs, issues, selectedDateRange.value[0], selectedDateRange.value[1]);
-
-    toast.add({ severity: 'success', summary: t('fetchSuccess'), detail: t('fetchSuccessDesc'), life: 3000 });
   } catch (error: any) {
     toast.add({ severity: 'error', summary: t('fetchError'), detail: error.message, life: 3000 });
   } finally {
@@ -566,6 +573,9 @@ watch(locale, () => {
 .main-content {
   padding: 2rem;
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
 .summary-cards {
@@ -580,8 +590,10 @@ watch(locale, () => {
   font-weight: bold;
   color: var(--p-primary-color);
   display: flex;
-  align-items: baseline;
+  align-items: flex-end; /* 下揃えにして単位とのバランスを保つ */
   gap: 0.5rem;
+  height: 60px; /* 高さを固定してレイアウトの上下のブレを完全に防止 */
+  padding-bottom: 4px;
 }
 
 .unit {
