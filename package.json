@@ -4,6 +4,8 @@
   "description": "FourSight (DORA Tracker for GitHub)",
   "scripts": {
     "build": "rimraf ./package/js && rimraf package.zip && npx webpack && cd package && zip -r ../package.zip .",
+    "generate-icons": "node generate_icons.js",
+    "generate-icons:dev": "node generate_icons.js --dev",
     "dev": "webpack --mode development --watch"
   },
   "devDependencies": {
