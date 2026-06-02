@@ -8,17 +8,18 @@
         <span>{{ t('dashboard') }}</span>
       </div>
       <div class="header-actions">
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <AutoComplete v-model="searchQuery" :suggestions="filteredRepos" @complete="searchRepos" @item-select="fetchMetricsData" @keyup.enter="fetchMetricsData" placeholder="owner/repo" dropdown style="width: 250px" />
+        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+          <Select v-if="tokens.length > 0 && tokens[0].token" v-model="activeTokenIndex" :options="tokenOptions" optionLabel="label" optionValue="value" style="width: 200px; max-width: 100%;" @change="saveActiveToken" />
+          <AutoComplete v-model="searchQuery" :suggestions="filteredRepos" @complete="searchRepos" @item-select="fetchMetricsData" @keyup.enter="fetchMetricsData" placeholder="owner/repo" dropdown style="width: 250px; max-width: 100%;" />
           <a v-if="searchQuery && searchQuery.includes('/')" :href="`https://github.com/${searchQuery.trim()}`" target="_blank" rel="noopener noreferrer" style="color: var(--p-surface-700); text-decoration: none; display: flex;" :title="t('openGithub')">
             <i class="pi pi-github" style="font-size: 1.25rem; cursor: pointer; transition: color 0.2s;"></i>
           </a>
         </div>
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
           <i class="pi pi-share-alt" style="color: var(--p-surface-500)"></i>
-          <InputText v-model="searchBranch" :placeholder="t('branchPlaceholder')" @keyup.enter="fetchMetricsData" style="width: 130px" />
+          <InputText v-model="searchBranch" :placeholder="t('branchPlaceholder')" @keyup.enter="fetchMetricsData" style="width: 130px; max-width: 100%;" />
         </div>
-        <DatePicker v-model="selectedDateRange" selectionMode="range" :manualInput="false" :placeholder="t('datePlaceholder')" dateFormat="yy/mm/dd" style="width: 240px" />
+        <DatePicker v-model="selectedDateRange" selectionMode="range" :manualInput="false" :placeholder="t('datePlaceholder')" dateFormat="yy/mm/dd" style="width: 240px; max-width: 100%;" />
         <Button icon="pi pi-refresh" rounded text @click="fetchMetricsData" :loading="isLoading" />
         <Button icon="pi pi-cog" rounded text @click="isOptionsVisible = true" />
       </div>
@@ -99,8 +100,19 @@
           {{ t('patDesc') }}<br>
           <small>{{ t('patScope') }} <code>repo</code>, <code>read:org</code></small>
         </p>
-        <div class="font-bold mb-2">GitHub PAT</div>
-        <InputText id="github-token" v-model="token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" style="width: 100%" />
+        <div class="font-bold mb-2">GitHub PATs</div>
+        
+        <div v-for="(item, index) in tokens" :key="index" style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem; align-items: flex-start;">
+          <div style="flex: 1;">
+            <InputText v-model="item.name" :placeholder="t('patName')" style="width: 100%" />
+          </div>
+          <div style="flex: 2;">
+            <InputText v-model="item.token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" style="width: 100%" type="password" />
+          </div>
+          <Button icon="pi pi-trash" severity="danger" text @click="removeToken(index)" :disabled="tokens.length === 1" />
+        </div>
+        
+        <Button icon="pi pi-plus" :label="t('addToken')" text size="small" @click="addToken" style="align-self: flex-start; margin-top: 0.5rem;" />
       </div>
       
       <div class="form-group">
@@ -129,6 +141,7 @@ import Dialog from 'primevue/dialog';
 import Toast from 'primevue/toast';
 import AutoComplete from 'primevue/autocomplete';
 import SelectButton from 'primevue/selectbutton';
+import Select from 'primevue/select';
 
 import { fetchMergedPullRequests, fetchBugIssues, searchRepositories } from './api/github';
 import { calculateMetrics, FourKeysMetrics } from './utils/metrics';
@@ -208,6 +221,9 @@ const t = (key: string) => {
       settings: "FourSight 設定",
       patDesc: "GitHub Personal Access Token (PAT) を設定してください。",
       patScope: "※ 必要なスコープ:",
+      patName: "PAT名 (必須)",
+      addToken: "PATを追加",
+      tokenRequired: "すべてのPATに名前とトークンを入力してください",
       bugLabels: "障害検知ラベル (CFR / TRRS 用)",
       bugLabelsHint: "カンマ区切りで複数指定可能（例:",
       cancel: "キャンセル",
@@ -246,6 +262,9 @@ const t = (key: string) => {
       settings: "FourSight Settings",
       patDesc: "Set your GitHub Personal Access Token (PAT).",
       patScope: "* Required scopes:",
+      patName: "PAT Name (Req)",
+      addToken: "Add PAT",
+      tokenRequired: "All PATs must have a name and token",
       bugLabels: "Bug/Incident Labels (for CFR & TRRS)",
       bugLabelsHint: "Comma separated (e.g.",
       cancel: "Cancel",
@@ -285,10 +304,13 @@ const filteredRepos = ref<string[]>([]);
 const searchRepos = async (event: any) => {
   const query = event.query;
   if (typeof chrome !== 'undefined' && chrome.storage) {
-    const result = await new Promise<any>((resolve) => chrome.storage.local.get(["githubToken"], resolve));
-    if (!result.githubToken) return;
+    const result = await new Promise<any>((resolve) => chrome.storage.local.get(["githubTokens", "activeTokenIndex"], resolve));
+    const tokenList = result.githubTokens || [];
+    const activeIdx = result.activeTokenIndex || 0;
+    const activeToken = tokenList[activeIdx]?.token;
+    if (!activeToken) return;
     try {
-      filteredRepos.value = await searchRepositories(query, result.githubToken);
+      filteredRepos.value = await searchRepositories(query, activeToken);
     } catch (e) {
       console.error(e);
     }
@@ -297,9 +319,29 @@ const searchRepos = async (event: any) => {
 
 // 設定モーダル用
 const isOptionsVisible = ref(false);
-const token = ref('');
+const tokens = ref<{name: string, token: string}[]>([{ name: '', token: '' }]);
+const tokenOptions = computed(() => tokens.value.map((tok, i) => ({ label: tok.name || `Token ${i + 1}`, value: i })));
+const activeTokenIndex = ref(0);
 const bugLabels = ref('bug,incident');
 const toast = useToast();
+
+const addToken = () => {
+  tokens.value.push({ name: '', token: '' });
+};
+const removeToken = (index: number) => {
+  if (tokens.value.length > 1) {
+    tokens.value.splice(index, 1);
+    if (activeTokenIndex.value >= tokens.value.length) {
+      activeTokenIndex.value = tokens.value.length - 1;
+    }
+  }
+};
+
+const saveActiveToken = () => {
+  if (typeof chrome !== 'undefined' && chrome.storage) {
+    chrome.storage.local.set({ activeTokenIndex: activeTokenIndex.value });
+  }
+};
 
 onMounted(() => {
   if (isDemoMode) {
@@ -310,12 +352,17 @@ onMounted(() => {
   }
 
   if (typeof chrome !== 'undefined' && chrome.storage) {
-    chrome.storage.local.get(["githubToken", "bugLabels", "locale"], (result) => {
-      if (result.githubToken) token.value = result.githubToken;
+    chrome.storage.local.get(["githubTokens", "activeTokenIndex", "bugLabels", "locale"], (result) => {
+      if (result.githubTokens && result.githubTokens.length > 0) {
+        tokens.value = result.githubTokens;
+      }
+      if (result.activeTokenIndex !== undefined) {
+        activeTokenIndex.value = result.activeTokenIndex;
+      }
       if (result.bugLabels) bugLabels.value = result.bugLabels;
       if (result.locale) locale.value = result.locale;
       
-      if (!result.githubToken) {
+      if (!result.githubTokens || result.githubTokens.length === 0 || !result.githubTokens[0].token) {
         // トークンが未設定の場合は自動で設定モーダルを開く
         isOptionsVisible.value = true;
       }
@@ -324,9 +371,18 @@ onMounted(() => {
 });
 
 const saveToken = () => {
+  // バリデーション: 全てのトークンで名前とトークン本体が入力されているか
+  for (const tok of tokens.value) {
+    if (!tok.name.trim() || !tok.token.trim()) {
+      toast.add({ severity: 'error', summary: t('inputError'), detail: t('tokenRequired'), life: 3000 });
+      return;
+    }
+  }
+
   if (typeof chrome !== 'undefined' && chrome.storage) {
     const data = {
-      githubToken: token.value.trim(),
+      githubTokens: tokens.value.map(tok => ({ name: tok.name.trim(), token: tok.token.trim() })),
+      activeTokenIndex: activeTokenIndex.value,
       bugLabels: bugLabels.value.trim() || 'bug,incident',
       locale: locale.value
     };
@@ -369,8 +425,10 @@ const fetchMetricsData = async () => {
       issues = demoData.issues;
       await new Promise(r => setTimeout(r, 600)); // ローディングを演出
     } else {
-      const result = await new Promise<any>((resolve) => chrome.storage.local.get(["githubToken", "bugLabels"], resolve));
-      const authToken = result.githubToken;
+      const result = await new Promise<any>((resolve) => chrome.storage.local.get(["githubTokens", "activeTokenIndex", "bugLabels"], resolve));
+      const tokenList = result.githubTokens || [];
+      const activeIdx = result.activeTokenIndex || 0;
+      const authToken = tokenList[activeIdx]?.token;
       const branch = searchBranch.value.trim() || 'main';
       const labels = result.bugLabels || 'bug,incident';
       
@@ -485,6 +543,8 @@ watch(locale, () => {
   padding: 1rem 2rem;
   background-color: var(--p-surface-0);
   border-bottom: 1px solid var(--p-surface-200);
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .logo {
@@ -500,6 +560,7 @@ watch(locale, () => {
   display: flex;
   align-items: center;
   gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .main-content {
