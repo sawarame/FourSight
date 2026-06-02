@@ -2,14 +2,15 @@ const sharp = require('sharp');
 const fs = require('fs');
 const path = require('path');
 
-// コマンドライン引数に --dev があるか確認
 const isDev = process.argv.includes("--dev");
+const isBeta = process.argv.includes("--beta");
 
 const iconDir = path.join(__dirname, 'package', 'icons');
 
-const svgPath = isDev ? 
-  path.join(__dirname, 'src', 'icon_dev.svg') : 
-  path.join(__dirname, 'src', 'icon.svg');
+const svgPath = 
+  isDev ? path.join(__dirname, 'src', 'icon_dev.svg') : 
+  isBeta ? path.join(__dirname, 'src', 'icon_beta.svg') :
+    path.join(__dirname, 'src', 'icon.svg');
 
 if (!fs.existsSync(iconDir)) {
   fs.mkdirSync(iconDir, { recursive: true });
